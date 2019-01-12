@@ -3,6 +3,38 @@
 # get_cpu_usage() requires mpstat package to work
 # get_song() requires jq package to work
 
+get_battery()
+{
+	icon=""
+	full=""
+	semifull=""
+	half=""
+	semiempty=""
+	empty=""
+
+	bat0=$(acpi -b | awk -F '[,:%]' 'FNR == 1 { printf $3 }')
+  	bat1=$(acpi -b | awk -F '[,:%]' 'FNR == 2 { printf $3 }')
+	total=$((${bat0} + ${bat1}))
+	percent=$(jq -n ${total}/2)
+	percent=$(printf %.0f ${percent})
+
+	if [ $percent -ge 90 ]; then
+		icon=$full
+	elif [ $percent -ge 60 ]; then
+		icon=$semifull
+	elif [ $percent -ge 30 ]; then
+		icon=$half
+	elif [ $percent -ge 10 ]; then
+		icon=$semiempty
+	else
+		icon=$empty
+	fi
+
+  	echo "${icon} ${percent}%"
+
+	return 0
+}
+
 get_cpu_usage()
 {
 	icon=""
@@ -157,13 +189,14 @@ get_volume()
 	return 0
 }
 
+if [ get_battery ]; then # battery to display
+	output="$(get_song)   $(get_volume)  $(get_battery)  $(get_date)  $(get_time)"
+else
+	output="$(get_song)   $(get_volume)  $(get_date)  $(get_time)"
+fi
+
 while true;
 do
-	# minimalist output
-	#xsetroot -name "$(get_song)   $(get_volume)  $(get_date)  $(get_time)"
-
-	# verbose output
-	xsetroot -name "$(get_song)   $(get_cpu_usage)  $(get_memory_usage)  $(get_disk_usage)  $(get_volume)  $(get_date)  $(get_time)"
-
+	xsetroot -name "$output"
 	sleep 1;
 done;
