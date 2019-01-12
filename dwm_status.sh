@@ -197,12 +197,12 @@ if get_battery ; then # battery to display / is a laptop
 	while true;
 	do
 		xsetroot -name "$(get_song)   $(get_volume)  $(get_battery)  $(get_date)  $(get_time)"
-		#sleep 1;
+		sleep 1;
 	done;
 else
 	while true;
 	do
 		xsetroot -name "$(get_song)   $(get_volume)  $(get_date)  $(get_time)"
-		#sleep 1;
+		sleep 1;
 	done;
 fi
