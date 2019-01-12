@@ -5,6 +5,10 @@
 
 get_battery()
 {
+	if ! pacman -Qi acpi &> /dev/null ; then # acpi not installed / not a laptop
+		return 1
+	fi
+
 	icon=""
 	full=""
 	semifull=""
@@ -189,14 +193,16 @@ get_volume()
 	return 0
 }
 
-if [ get_battery ]; then # battery to display
-	output="$(get_song)   $(get_volume)  $(get_battery)  $(get_date)  $(get_time)"
+if get_battery ; then # battery to display / is a laptop
+	while true;
+	do
+		xsetroot -name "$(get_song)   $(get_volume)  $(get_battery)  $(get_date)  $(get_time)"
+		#sleep 1;
+	done;
 else
-	output="$(get_song)   $(get_volume)  $(get_date)  $(get_time)"
+	while true;
+	do
+		xsetroot -name "$(get_song)   $(get_volume)  $(get_date)  $(get_time)"
+		#sleep 1;
+	done;
 fi
-
-while true;
-do
-	xsetroot -name "$output"
-	sleep 1;
-done;
