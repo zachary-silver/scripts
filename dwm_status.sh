@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# get_battery() requires acpi to work
 # get_cpu_usage() requires mpstat package to work
 # get_song() requires jq package to work
 
