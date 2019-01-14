@@ -6,8 +6,8 @@
 
 get_battery()
 {
-	if ! pacman -Qi acpi &> /dev/null ; then # acpi not installed / not a laptop
-		return 1
+	if ! pacman -Qi acpi &> /dev/null ; then
+		return 1 # acpi not installed
 	fi
 
 	icon=""
@@ -20,19 +20,19 @@ get_battery()
 	bat0=$(acpi -b | awk -F '[,:%]' 'FNR == 1 { printf $3 }')
   	bat1=$(acpi -b | awk -F '[,:%]' 'FNR == 2 { printf $3 }')
 	total=$((${bat0} + ${bat1}))
-	percent=$(jq -n ${total}/2)
+	percent=$(jq -n ${total}/2) # delegate to jq to handle float division
 	percent=$(printf %.0f ${percent})
 
 	if [ $percent -ge 90 ]; then
-		icon=$full
+		icon=${full}
 	elif [ $percent -ge 60 ]; then
-		icon=$semifull
+		icon=${semifull}
 	elif [ $percent -ge 30 ]; then
-		icon=$half
+		icon=${half}
 	elif [ $percent -ge 10 ]; then
-		icon=$semiempty
+		icon=${semiempty}
 	else
-		icon=$empty
+		icon=${empty}
 	fi
 
   	echo "${icon} ${percent}%"
@@ -44,9 +44,9 @@ get_cpu_usage()
 {
 	icon=""
 	used="$(mpstat -u | awk 'FNR == 4 { print $4 }')"
-	cpu_usage="$(printf %3.1f ${used})%"
+	cpu_usage=$(printf %3.1f ${used})
 
-	echo "${icon} ${cpu_usage}"
+	echo "${icon} ${cpu_usage}%"
 
 	return 0
 }
@@ -65,22 +65,8 @@ get_disk_usage()
 {
 	icon=""
 	disk_usage=$(df -h / | awk 'FNR == 2 { printf("%d/%d", $3, $2) }')
-	disk_usage="${disk_usage}G"
 
-	echo "${icon} ${disk_usage}"
-
-	return 0
-}
-
-get_memory_usage()
-{
-	icon=""
-	total_memory=$(cat /proc/meminfo | grep MemTotal: | awk '{ printf("%d", ($2+500000)/1000000) }')
-	used_memory=$(cat /proc/meminfo | grep Active: | awk '{ printf("%d", ($2+500000)/1000000) }')
-	memory_usage="${used_memory}/${total_memory}"
-	memory_usage="$(printf %4s ${memory_usage})G"
-
-	echo "${icon} ${memory_usage}"
+	echo "${icon} ${disk_usage}G"
 
 	return 0
 }
@@ -112,6 +98,19 @@ get_ip()
 	return 0
 }
 
+get_memory_usage()
+{
+	icon=""
+	total_memory=$(cat /proc/meminfo | grep MemTotal: | awk '{ printf("%d", ($2+500000)/1000000) }')
+	used_memory=$(cat /proc/meminfo | grep Active: | awk '{ printf("%d", ($2+500000)/1000000) }')
+	memory_usage="${used_memory}/${total_memory}"
+	memory_usage="$(printf %4s ${memory_usage})G"
+
+	echo "${icon} ${memory_usage}"
+
+	return 0
+}
+
 get_song_data()
 {
 	data=$1
@@ -133,7 +132,7 @@ get_song()
 	artits="$(get_song_data '.song.artist')"
 	liked="$(get_song_data '.rating.liked')"
 
-	if [[ ${title} = "null" ]]; then # player not active, don't print anything
+	if [[ ${title} = "null" ]]; then
 		echo ""
 	else
 		current_time="$(get_song_data '.time.current')"
@@ -141,9 +140,9 @@ get_song()
 
 		mseconds_left="$((${total_time} - ${current_time}))"
 		seconds_left="$((${mseconds_left} / 1000))"
-		minutes="$((${seconds_left}/60))"
-		seconds="$((${seconds_left}%60))"
-		seconds="$(printf %02d ${seconds})" # format seconds to always have two digits ie. '07'
+		minutes="$((${seconds_left} / 60))"
+		seconds="$((${seconds_left} % 60))"
+		seconds="$(printf %02d ${seconds})"
 
 		song="${title} - ${artits}"
 		time_left="${minutes}:${seconds}"
@@ -194,13 +193,28 @@ get_volume()
 	return 0
 }
 
-if get_battery ; then # battery to display / is a laptop
+get_wifi()
+{
+	icon=""
+
+	connection=$(cat /proc/net/wireless | awk 'FNR == 3 { print int($3 * 100 / 70) }')
+
+	if [[ ! -z ${connection} ]]; then
+		echo "${icon} ${connection}%"
+	else
+		echo ""
+	fi
+
+	return 0
+}
+
+if get_battery ; then 	# laptop
 	while true;
 	do
-		xsetroot -name "$(get_song)   $(get_volume)  $(get_battery)  $(get_date)  $(get_time)"
+		xsetroot -name "$(get_song)   $(get_wifi)  $(get_volume)  $(get_battery)  $(get_date)  $(get_time)"
 		sleep 1;
 	done;
-else
+else 			# desktop
 	while true;
 	do
 		xsetroot -name "$(get_song)   $(get_volume)  $(get_date)  $(get_time)"
