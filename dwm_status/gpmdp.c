@@ -2,27 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "dwm_status.h"
+
+#define MAX_TIME_OUTPUT 6
 #define MAX_SONG_OUTPUT 64
+#define NULL_JSON_FILE_SIZE 390
 #define MAX_JSON_VALUE_OUTPUT 64
 #define MAX_JSON_FILE_SIZE 10240
-#define NULL_JSON_FILE_SIZE 390
-#define MAX_TIME_OUTPUT 6
-#define LENGTHOF(x) (int)(sizeof(x) / sizeof((x)[0]))
 
-/* Function declarations */
-void set_song_output(char song_output[MAX_SONG_OUTPUT]);
-void set_json_value(char json_value[MAX_JSON_VALUE_OUTPUT], const char *json);
-int concat_strings(char first[MAX_SONG_OUTPUT], const char *second, int start);
-
-/* Global constants */
-static const char   *PAUSE_ICON = "";
-static const char   *PLAY_ICON = "";
-static const char   *STOP_ICON = "";
-static const char   *LIKED_ICON = "";
-static const char   *GPMDP_JSON_FILE = "/home/zack/.config/Google Play Music Desktop Player/json_store/playback.json";
-
-/* Global variables */
-static char song_output[MAX_SONG_OUTPUT];
+static const char *GPMDP_JSON_FILE = "/home/zack/.config/Google Play Music Desktop Player/json_store/playback.json";
 
 void set_song_output(char song_output[MAX_SONG_OUTPUT])
 {

@@ -1,5 +1,4 @@
 /* Compile with -lX11 and -lasound flags */
-
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
@@ -9,9 +8,9 @@
 #include <alsa/control.h>
 #include <X11/Xlib.h>
 
-#include "header.h"
-#include "gpmdp.c"
+#include "dwm_status.h"
 
+/* Macros */
 #define TRUE 1
 #define FALSE 0
 #define ICON_SIZE 3
@@ -22,16 +21,6 @@
 #define MAX_SONG_OUTPUT 64
 #define MAX_TIME_OUTPUT 6
 #define MAX_BUFFER_SIZE 1024
-
-/* Function declarations */
-float get_batteries(void);
-void set_status(void);
-void set_time_icon(void);
-void set_volume_and_icon(void);
-void set_wifi_output(void);
-void set_battery_icon(int battery_output);
-void set_date(const char *date_format, char date_output[MAX_DATE_OUTPUT]);
-float get_battery(const char *energy_now_file, const char *energy_full_file);
 
 /* Global variables */
 static Display      *display;
@@ -134,21 +123,25 @@ void set_volume_and_icon(void)
 
     snd_mixer_open(&handle, 0);
 
+    /* Setup handle */
     snd_mixer_attach(handle, sound_card);
     snd_mixer_selem_register(handle, NULL, NULL);
     snd_mixer_load(handle);
 
+    /* Setup sid */
     snd_mixer_selem_id_alloca(&sid);
     snd_mixer_selem_id_set_index(sid, 0);
     snd_mixer_selem_id_set_name(sid, selem_name);
     snd_mixer_elem_t* elem = snd_mixer_find_selem(handle, sid);
 
+    /* Get desired values */
     snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
     snd_mixer_selem_get_playback_volume(elem, 0, &volume);
     snd_mixer_selem_get_playback_switch(elem, mixer_channel, &playback_active);
 
     snd_mixer_close(handle);
 
+    /* Convert value to percentage appropriate for output */
     volume = (double)volume / max * 100 + 0.5;
     sprintf(volume_output, "%i%%", (int)volume);
 

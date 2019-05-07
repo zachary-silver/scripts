@@ -147,6 +147,10 @@ get_song()
 		song="${title} - ${artits}"
 		time_left="${minutes}:${seconds}"
 
+		if [[ ${#song} -ge 60 ]]; then # Moderate output length
+			song="${song:0:57}..."
+		fi
+
 		if [[ ${liked} = 'true' ]]; then
 		    metadata=" ${song} ${time_left}"
 	    	else
@@ -208,16 +212,17 @@ get_wifi()
 	return 0
 }
 
+
 if get_battery ; then 	# laptop
 	while true;
 	do
 		xsetroot -name "$(get_song)   $(get_wifi)  $(get_volume)  $(get_battery)  $(get_date)  $(get_time)"
-		sleep 1;
+		sleep 0.1;
 	done;
 else 			# desktop
 	while true;
 	do
 		xsetroot -name "$(get_song)   $(get_volume)  $(get_date)  $(get_time)"
-		sleep 1;
+		sleep 0.3;
 	done;
 fi
