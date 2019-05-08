@@ -31,7 +31,7 @@ void set_song_output(char song_output[MAX_SONG_OUTPUT])
         song_current_time,
         song_total_time
     };
-    static char *song_metadata_queries[] =
+    static const char *song_metadata_queries[] =
     {
         "playing",
         "title",
@@ -71,9 +71,8 @@ void set_song_output(char song_output[MAX_SONG_OUTPUT])
         return;
     }
 
-    /* Search for the song metadata json keys specified in */
-    /* song_metadata_queries and set the value of the appropriate */
-    /* song_metadata array */
+    /* Search for the json keys specified in song_metadata_queries */
+    /* and set the value of the appropriate song_metadata array element */
     for (i = 0; i < LENGTHOF(song_metadata); i++)
     {
         json_data_ptr = strstr(json_data_ptr, song_metadata_queries[i]);
@@ -89,9 +88,9 @@ void set_song_output(char song_output[MAX_SONG_OUTPUT])
     seconds = time_left % 60;
     sprintf(song_time, "%i:%02i", minutes, seconds);
 
-    start = 0;
     /* Logically clear the previous string */
     song_output[0] = '\0';
+    start = 0;
 
     if (song_playing[0] == 't')
     {
@@ -187,7 +186,7 @@ int concat_strings(char first[MAX_SONG_OUTPUT], const char *second, int start)
     first[i++] = ' ';
 
     /* Append characters from second onto first until we've reached */
-    /* the end of either and mark the new end with a null terminator */
+    /* the end of either and mark the new end with the null terminator */
     for (j = 0; second[j] != '\0' && i < max_length; i++, j++)
     {
         first[i] = second[j];

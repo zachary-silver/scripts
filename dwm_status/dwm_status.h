@@ -26,7 +26,7 @@ static const char   *ENERGY_NOW_FILE_BAT0 = "/sys/class/power_supply/BAT0/energy
 static const char   *ENERGY_NOW_FILE_BAT1 = "/sys/class/power_supply/BAT1/energy_now";
 static const char   *ENERGY_FULL_FILE_BAT0 = "/sys/class/power_supply/BAT0/energy_full";
 static const char   *ENERGY_FULL_FILE_BAT1 = "/sys/class/power_supply/BAT1/energy_full";
-static const struct timespec sleep_time = { .tv_sec = 0, .tv_nsec = 200000000 };
+static const struct timespec SLEEP_TIME = { .tv_sec = 0, .tv_nsec = 500000000 };
 
 /* Function declarations */
 float get_batteries(void);
@@ -34,9 +34,9 @@ void set_status(void);
 void set_time_icon(void);
 void set_volume_and_icon(void);
 void set_wifi_output(void);
-void set_battery_icon(int battery_output);
+void set_battery_icon(void);
+void set_song_output(char song_output[MAX_SONG_OUTPUT]);
 void set_date(const char *date_format, char date_output[MAX_DATE_OUTPUT]);
 float get_battery(const char *energy_now_file, const char *energy_full_file);
-void set_song_output(char song_output[MAX_SONG_OUTPUT]);
 void set_json_value(char json_value[MAX_JSON_VALUE_OUTPUT], const char *json);
 int concat_strings(char first[MAX_SONG_OUTPUT], const char *second, int start);

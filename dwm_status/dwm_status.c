@@ -51,7 +51,7 @@ infinite_loop:
     set_date(DATE_FORMAT, date_output);
     set_date(TIME_FORMAT, time_output);
     battery_output = get_batteries();
-    set_battery_icon(battery_output);
+    set_battery_icon();
 
     snprintf(status_output, MAX_OUTPUT,
              "%s %s %s %s  %s %.0f%%  %s %s  %s%s",
@@ -63,7 +63,7 @@ infinite_loop:
              time_icon, time_output);
 
     set_status();
-    nanosleep(&sleep_time, NULL);
+    nanosleep(&SLEEP_TIME, NULL);
     goto infinite_loop;
 }
 
@@ -118,6 +118,7 @@ void set_volume_and_icon(void)
     static const char *selem_name = "Master";
     static snd_mixer_t *handle;
     static snd_mixer_selem_id_t *sid;
+    static snd_mixer_elem_t* elem;
     static long min, max, volume;
     static int playback_active;
 
@@ -132,7 +133,9 @@ void set_volume_and_icon(void)
     snd_mixer_selem_id_alloca(&sid);
     snd_mixer_selem_id_set_index(sid, 0);
     snd_mixer_selem_id_set_name(sid, selem_name);
-    snd_mixer_elem_t* elem = snd_mixer_find_selem(handle, sid);
+
+    /* Get elem */
+    elem = snd_mixer_find_selem(handle, sid);
 
     /* Get desired values */
     snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
@@ -195,9 +198,9 @@ void set_wifi_output(void)
     sprintf(wifi_output, " %s %i%% ", wifi_icon, wifi_strength);
 }
 
-void set_battery_icon(int battery_output)
+void set_battery_icon(void)
 {
-    switch (battery_output)
+    switch ((int)(battery_output + 0.5))
     {
         case 90 ... 100:
             battery_icon = BATTERY_ICON_FULL;
