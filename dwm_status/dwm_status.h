@@ -26,7 +26,7 @@ static const char   *ENERGY_NOW_FILE_BAT0 = "/sys/class/power_supply/BAT0/energy
 static const char   *ENERGY_NOW_FILE_BAT1 = "/sys/class/power_supply/BAT1/energy_now";
 static const char   *ENERGY_FULL_FILE_BAT0 = "/sys/class/power_supply/BAT0/energy_full";
 static const char   *ENERGY_FULL_FILE_BAT1 = "/sys/class/power_supply/BAT1/energy_full";
-static const struct timespec SLEEP_TIME = { .tv_sec = 0, .tv_nsec = 500000000 };
+static const struct timespec SLEEP_TIME = { .tv_sec = 1, .tv_nsec = 000000000 };
 
 /* Function declarations */
 float get_batteries(void);
