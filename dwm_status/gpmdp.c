@@ -40,7 +40,7 @@ void set_song_output(char song_output[MAX_SONG_OUTPUT])
         "current",
         "total"
     };
-    static int i, start, time_left, minutes, seconds,
+    static int i, start, total_seconds_left, minutes, seconds,
                max_file_size = MAX_JSON_FILE_SIZE - 1;
     static char character;
     static FILE *fd;
@@ -67,7 +67,6 @@ void set_song_output(char song_output[MAX_SONG_OUTPUT])
     /* produced when the program isn't running */
     if (i <= NULL_JSON_FILE_SIZE)
     {
-        song_output[0] = '\0';
         return;
     }
 
@@ -76,16 +75,15 @@ void set_song_output(char song_output[MAX_SONG_OUTPUT])
     for (i = 0; i < LENGTHOF(song_metadata); i++)
     {
         json_data_ptr = strstr(json_data_ptr, song_metadata_queries[i]);
-        if (json_data_ptr == NULL)
+        if (json_data_ptr != NULL)
         {
-            return;
+            set_json_value(song_metadata[i], json_data_ptr);
         }
-        set_json_value(song_metadata[i], json_data_ptr);
     }
 
-    time_left = (atoi(song_total_time) - atoi(song_current_time)) / 1000;
-    minutes = time_left / 60;
-    seconds = time_left % 60;
+    total_seconds_left = (atoi(song_total_time) - atoi(song_current_time)) / 1000;
+    minutes = total_seconds_left / 60;
+    seconds = total_seconds_left % 60;
     sprintf(song_time, "%i:%02i", minutes, seconds);
 
     /* Logically clear the previous string */
@@ -112,9 +110,9 @@ void set_song_output(char song_output[MAX_SONG_OUTPUT])
 
     /* If the song output is too long, shorten */
     /* with "..." before concatenating song_time */
-    if (start > MAX_SONG_OUTPUT - 8)
+    if (start > MAX_SONG_OUTPUT - 9)
     {
-        for (i = MAX_SONG_OUTPUT - 10; i < MAX_SONG_OUTPUT - 7; i++)
+        for (i = MAX_SONG_OUTPUT - 11; i < MAX_SONG_OUTPUT - 8; i++)
         {
             song_output[i] = '.';
         }
@@ -137,7 +135,7 @@ void set_json_value(char json_value[MAX_JSON_VALUE_OUTPUT], const char *json_dat
     for (i++; json_data[i] == ' '; i++);
 
     /* In this context, the json value will either be a string */
-    /* (indicated by a double quote), a boolean, or an integer. */
+    /* (indicated by a double quote), a boolean, an integer, or null. */
     character = json_data[i];
     if (character == '"')
     {
@@ -174,9 +172,11 @@ int concat_strings(char first[MAX_SONG_OUTPUT], const char *second, int start)
 {
     static int max_length = MAX_SONG_OUTPUT - 1, i, j;
 
+    /* Returning MAX_SONG_OUTPUT will effectively prevent */
+    /* any more concatenating from subsequent calls */
     if (start < 0 || start > max_length)
     {
-        return -1;
+        return MAX_SONG_OUTPUT;
     }
 
     /* Reach the end of the first string if we're not already there */

@@ -224,9 +224,9 @@ void set_time_icon(void)
 {
     /* Provide consistent spacing between the time icon and time value */
     /* for both single and double digit times throughout the day. */
-    /* All single digit times are prefixed with an empty space. */
-    time_icon = time_output[0] == ' ' ? TIME_ICON :
-                                        TIME_ICON_WITH_SPACE;
+    /* All double digit times are prefixed with an empty space. */
+    time_icon = time_output[0] != ' ' ? TIME_ICON_WITH_SPACE :
+                                        TIME_ICON;
 }
 
 void set_status(void)

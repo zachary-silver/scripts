@@ -217,7 +217,7 @@ if get_battery ; then 	# laptop
 	while true;
 	do
 		xsetroot -name "$(get_song)   $(get_wifi)  $(get_volume)  $(get_battery)  $(get_date)  $(get_time)"
-		sleep 0.1;
+		sleep 1.0;
 	done;
 else 			# desktop
 	while true;
