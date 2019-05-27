@@ -6,6 +6,8 @@
 #include <inttypes.h>
 #include <alsa/asoundlib.h>
 #include <alsa/control.h>
+#include <sys/sysinfo.h>
+#include <sys/statvfs.h>
 #include <X11/Xlib.h>
 
 #include "dwm_status.h"
@@ -13,13 +15,14 @@
 /* Macros */
 #define TRUE 1
 #define FALSE 0
-#define ICON_SIZE 3
 #define MAX_OUTPUT 512
 #define MAX_DATE_OUTPUT 64
 #define MAX_VOLUME_OUTPUT 8
 #define MAX_WIFI_OUTPUT 16
+#define MAX_MEMORY_OUTPUT 8
+#define MAX_CPU_OUTPUT 8
 #define MAX_SONG_OUTPUT 64
-#define MAX_TIME_OUTPUT 6
+#define MAX_TIME_OUTPUT 8
 #define MAX_BUFFER_SIZE 1024
 
 /* Global variables */
@@ -29,6 +32,9 @@ static const char   *date_icon;
 static const char   *time_icon;
 static const char   *volume_icon;
 static const char   *wifi_icon;
+static const char   *memory_icon;
+static const char   *cpu_icon;
+static const char   *disk_icon;
 static float        battery_output;
 static char         date_output[MAX_DATE_OUTPUT];
 static char         time_output[MAX_DATE_OUTPUT];
@@ -36,17 +42,25 @@ static char         song_output[MAX_SONG_OUTPUT];
 static char         status_output[MAX_OUTPUT];
 static char         volume_output[MAX_VOLUME_OUTPUT];
 static char         wifi_output[MAX_WIFI_OUTPUT];
+static char         memory_output[MAX_MEMORY_OUTPUT];
+static char         cpu_output[MAX_CPU_OUTPUT];
+static char         disk_space_output[MAX_CPU_OUTPUT];
 
 int main(void)
 {
     display = XOpenDisplay(NULL);
     date_icon = DATE_ICON;
     wifi_icon = WIFI_ICON;
+    memory_icon = MEMORY_ICON;
+    cpu_icon = CPU_ICON;
+    disk_icon = DISK_ICON;
 
 infinite_loop:
     set_time_icon();
     set_volume_and_icon();
     set_wifi_output();
+    set_memory_output();
+    set_cpu_output();
     set_song_output(song_output);
     set_date(DATE_FORMAT, date_output);
     set_date(TIME_FORMAT, time_output);
@@ -54,9 +68,11 @@ infinite_loop:
     set_battery_icon();
 
     snprintf(status_output, MAX_OUTPUT,
-             "%s %s %s %s  %s %.0f%%  %s %s  %s%s",
+             "%s %s %s %s  %s %s  %s %s  %s %.0f%%  %s %s  %s%s",
              song_output,
              wifi_output,
+             cpu_icon, cpu_output,
+             memory_icon, memory_output,
              volume_icon, volume_output,
              battery_icon, battery_output,
              date_icon, date_output,
@@ -107,6 +123,81 @@ float get_battery(const char *energy_now_file, const char *energy_full_file)
     fclose(fd);
 
     return (energy_now / energy_full) * 100;
+}
+
+void set_memory_output(void)
+{
+    static float memory_used, total_memory;
+    static struct sysinfo sys_info;
+
+    sysinfo(&sys_info);
+    memory_used = (sys_info.totalram - sys_info.freeram) / GIGABYTE;
+    total_memory = sys_info.totalram / GIGABYTE;
+
+    sprintf(memory_output, "%i/%iG",
+            (int)(memory_used + 0.5),
+            (int)(total_memory + 0.5));
+}
+
+void set_cpu_output(void)
+{
+    static long int prev_load[7] = {}, curr_load[7] = {},
+                    curr_load_sum, prev_load_sum, load_delta,
+                    idle_time_delta;
+    static float cpu_usage;
+    static int i;
+    static FILE *fd;
+
+    fd = fopen("/proc/stat","r");
+    if (fd == NULL)
+    {
+        return;
+    }
+    /* Ignore first column which only contains the string 'cpu' */
+    /* and read the rest of the cpu load information */
+    fscanf(fd, "%*s %li %li %li %li %li %li %li",
+           &curr_load[0], &curr_load[1],
+           &curr_load[2], &curr_load[3],
+           &curr_load[4], &curr_load[5],
+           &curr_load[6]);
+    fclose(fd);
+
+    for (i = 0, prev_load_sum = curr_load_sum, curr_load_sum = 0; i < 7; i++)
+    {
+        curr_load_sum += curr_load[i];
+    }
+
+    load_delta = prev_load_sum - curr_load_sum;
+    load_delta = load_delta < 0 ? -load_delta : load_delta;
+
+    idle_time_delta = curr_load[3] - prev_load[3];
+    idle_time_delta = idle_time_delta < 0 ? -idle_time_delta : idle_time_delta;
+
+    cpu_usage = 100 * (load_delta - idle_time_delta) / (float)load_delta;
+
+    for (int i = 0; i < 7; i++)
+    {
+        prev_load[i] = curr_load[i];
+    }
+
+    sprintf(cpu_output, "%.1f%%", cpu_usage);
+}
+
+void set_disk_space_output(void)
+{
+    static unsigned long total_bytes, used_bytes;
+    static struct statvfs disk_info;
+
+    if (statvfs("/", &disk_info) < 0)
+    {
+        return;
+    }
+    total_bytes = disk_info.f_blocks * disk_info.f_bsize;
+    used_bytes = total_bytes - (disk_info.f_bfree * disk_info.f_bsize);
+
+    sprintf(disk_space_output, "%i/%iG",
+            (int)(used_bytes / GIGABYTE + 0.5),
+            (int)(total_bytes / GIGABYTE + 0.5));
 }
 
 void set_volume_and_icon(void)

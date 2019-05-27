@@ -110,9 +110,9 @@ void set_song_output(char song_output[MAX_SONG_OUTPUT])
 
     /* If the song output is too long, shorten */
     /* with "..." before concatenating song_time */
-    if (start > MAX_SONG_OUTPUT - 9)
+    if (start > MAX_SONG_OUTPUT - 11)
     {
-        for (i = MAX_SONG_OUTPUT - 11; i < MAX_SONG_OUTPUT - 8; i++)
+        for (i = MAX_SONG_OUTPUT - 13; i < MAX_SONG_OUTPUT - 10; i++)
         {
             song_output[i] = '.';
         }
