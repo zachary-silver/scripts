@@ -85,7 +85,8 @@ infinite_loop:
 
 void set_date(const char *date_format, char date_output[MAX_DATE_OUTPUT])
 {
-    time_t current_time = time(NULL);
+    static time_t current_time;
+    current_time = time(NULL);
 
     strftime(date_output, MAX_DATE_OUTPUT,
              date_format, localtime(&current_time));
@@ -129,8 +130,8 @@ void set_memory_output(void)
 {
     static float memory_used, total_memory;
     static struct sysinfo sys_info;
-
     sysinfo(&sys_info);
+
     memory_used = (sys_info.totalram - sys_info.freeram) / GIGABYTE;
     total_memory = sys_info.totalram / GIGABYTE;
 
@@ -141,9 +142,9 @@ void set_memory_output(void)
 
 void set_cpu_output(void)
 {
-    static long int prev_load[7] = {}, curr_load[7] = {},
-                    curr_load_sum, prev_load_sum, load_delta,
-                    idle_time_delta;
+    static long int curr_load[7] = {}, prev_load_idle,
+                    curr_load_sum, prev_load_sum,
+                    load_delta, idle_time_delta;
     static float cpu_usage;
     static int i;
     static FILE *fd;
@@ -170,15 +171,11 @@ void set_cpu_output(void)
     load_delta = prev_load_sum - curr_load_sum;
     load_delta = load_delta < 0 ? -load_delta : load_delta;
 
-    idle_time_delta = curr_load[3] - prev_load[3];
+    idle_time_delta = curr_load[3] - prev_load_idle;
     idle_time_delta = idle_time_delta < 0 ? -idle_time_delta : idle_time_delta;
+    prev_load_idle = curr_load[3];
 
     cpu_usage = 100 * (load_delta - idle_time_delta) / (float)load_delta;
-
-    for (int i = 0; i < 7; i++)
-    {
-        prev_load[i] = curr_load[i];
-    }
 
     sprintf(cpu_output, "%.1f%%", cpu_usage);
 }
