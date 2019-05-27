@@ -8,7 +8,7 @@
 #define MAX_SONG_OUTPUT 64
 #define NULL_JSON_FILE_SIZE 390
 #define MAX_JSON_VALUE_OUTPUT 64
-#define MAX_JSON_FILE_SIZE 10240
+#define MAX_JSON_FILE_SIZE 8192
 
 static const char *GPMDP_JSON_FILE = "/home/zack/.config/Google Play Music Desktop Player/json_store/playback.json";
 
