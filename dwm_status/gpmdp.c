@@ -1,13 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "dwm_status.h"
 
-#define MAX_TIME_OUTPUT 6
-#define MAX_SONG_OUTPUT 64
 #define NULL_JSON_FILE_SIZE 390
-#define MAX_JSON_VALUE_OUTPUT 64
 #define MAX_JSON_FILE_SIZE 8192
 
 static const char *GPMDP_JSON_FILE = "/home/zack/.config/Google Play Music Desktop Player/json_store/playback.json";
@@ -110,9 +105,9 @@ void set_song_output(char song_output[MAX_SONG_OUTPUT])
 
     /* If the song output is too long, shorten */
     /* with "..." before concatenating song_time */
-    if (start > MAX_SONG_OUTPUT - 11)
+    if (start > MAX_SONG_OUTPUT - 8)
     {
-        for (i = MAX_SONG_OUTPUT - 13; i < MAX_SONG_OUTPUT - 10; i++)
+        for (i = MAX_SONG_OUTPUT - 10; i < MAX_SONG_OUTPUT - 7; i++)
         {
             song_output[i] = '.';
         }

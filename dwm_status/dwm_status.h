@@ -1,6 +1,20 @@
+/* Compile with -lX11 and -lasound flags */
+#include <stdio.h>
+#include <stdlib.h>
+
 /* Global macros */
+#define TRUE 1
+#define FALSE 0
+#define MAX_OUTPUT 512
 #define MAX_DATE_OUTPUT 64
-#define MAX_SONG_OUTPUT 64
+#define MAX_VOLUME_OUTPUT 8
+#define MAX_WIFI_OUTPUT 16
+#define MAX_MEMORY_OUTPUT 8
+#define MAX_CPU_OUTPUT 8
+#define MAX_TIME_OUTPUT 8
+#define MAX_BUFFER_SIZE 1024
+#define MAX_DATE_OUTPUT 64
+#define MAX_SONG_OUTPUT 58
 #define MAX_JSON_VALUE_OUTPUT 64
 #define LENGTHOF(x) (int)(sizeof(x) / sizeof((x)[0]))
 

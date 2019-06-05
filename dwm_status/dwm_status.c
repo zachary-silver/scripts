@@ -1,8 +1,5 @@
-/* Compile with -lX11 and -lasound flags */
-#include <stdio.h>
 #include <unistd.h>
 #include <time.h>
-#include <stdlib.h>
 #include <inttypes.h>
 #include <alsa/asoundlib.h>
 #include <alsa/control.h>
@@ -12,48 +9,25 @@
 
 #include "dwm_status.h"
 
-/* Macros */
-#define TRUE 1
-#define FALSE 0
-#define MAX_OUTPUT 512
-#define MAX_DATE_OUTPUT 64
-#define MAX_VOLUME_OUTPUT 8
-#define MAX_WIFI_OUTPUT 16
-#define MAX_MEMORY_OUTPUT 8
-#define MAX_CPU_OUTPUT 8
-#define MAX_SONG_OUTPUT 64
-#define MAX_TIME_OUTPUT 8
-#define MAX_BUFFER_SIZE 1024
-
 /* Global variables */
 static Display      *display;
 static const char   *battery_icon;
-static const char   *date_icon;
 static const char   *time_icon;
 static const char   *volume_icon;
-static const char   *wifi_icon;
-static const char   *memory_icon;
-static const char   *cpu_icon;
-static const char   *disk_icon;
 static float        battery_output;
+static char         cpu_output[MAX_CPU_OUTPUT];
 static char         date_output[MAX_DATE_OUTPUT];
-static char         time_output[MAX_DATE_OUTPUT];
+static char         disk_space_output[MAX_CPU_OUTPUT];
+static char         memory_output[MAX_MEMORY_OUTPUT];
 static char         song_output[MAX_SONG_OUTPUT];
 static char         status_output[MAX_OUTPUT];
+static char         time_output[MAX_DATE_OUTPUT];
 static char         volume_output[MAX_VOLUME_OUTPUT];
 static char         wifi_output[MAX_WIFI_OUTPUT];
-static char         memory_output[MAX_MEMORY_OUTPUT];
-static char         cpu_output[MAX_CPU_OUTPUT];
-static char         disk_space_output[MAX_CPU_OUTPUT];
 
 int main(void)
 {
     display = XOpenDisplay(NULL);
-    date_icon = DATE_ICON;
-    wifi_icon = WIFI_ICON;
-    memory_icon = MEMORY_ICON;
-    cpu_icon = CPU_ICON;
-    disk_icon = DISK_ICON;
 
 infinite_loop:
     set_time_icon();
@@ -71,25 +45,16 @@ infinite_loop:
              "%s %s %s %s  %s %s  %s %s  %s %.0f%%  %s %s  %s%s",
              song_output,
              wifi_output,
-             cpu_icon, cpu_output,
-             memory_icon, memory_output,
+             CPU_ICON, cpu_output,
+             MEMORY_ICON, memory_output,
              volume_icon, volume_output,
              battery_icon, battery_output,
-             date_icon, date_output,
+             DATE_ICON, date_output,
              time_icon, time_output);
 
     set_status();
     nanosleep(&SLEEP_TIME, NULL);
     goto infinite_loop;
-}
-
-void set_date(const char *date_format, char date_output[MAX_DATE_OUTPUT])
-{
-    static time_t current_time;
-    current_time = time(NULL);
-
-    strftime(date_output, MAX_DATE_OUTPUT,
-             date_format, localtime(&current_time));
 }
 
 float get_batteries(void)
@@ -126,18 +91,26 @@ float get_battery(const char *energy_now_file, const char *energy_full_file)
     return (energy_now / energy_full) * 100;
 }
 
-void set_memory_output(void)
+void set_battery_icon(void)
 {
-    static float memory_used, total_memory;
-    static struct sysinfo sys_info;
-    sysinfo(&sys_info);
-
-    memory_used = (sys_info.totalram - sys_info.freeram) / GIGABYTE;
-    total_memory = sys_info.totalram / GIGABYTE;
-
-    sprintf(memory_output, "%i/%iG",
-            (int)(memory_used + 0.5),
-            (int)(total_memory + 0.5));
+    switch ((int)battery_output)
+    {
+        case 90 ... 100:
+            battery_icon = BATTERY_ICON_FULL;
+            break;
+        case 60 ... 89:
+            battery_icon = BATTERY_ICON_THREE_QUARTERS;
+            break;
+        case 30 ... 59:
+            battery_icon = BATTERY_ICON_HALF;
+            break;
+        case 10 ... 29:
+            battery_icon = BATTERY_ICON_QUARTER;
+            break;
+        default:
+            battery_icon = BATTERY_ICON_EMPTY;
+            break;
+    }
 }
 
 void set_cpu_output(void)
@@ -173,11 +146,30 @@ void set_cpu_output(void)
 
     idle_time_delta = curr_load[3] - prev_load_idle;
     idle_time_delta = idle_time_delta < 0 ? -idle_time_delta : idle_time_delta;
+
     prev_load_idle = curr_load[3];
 
     cpu_usage = 100 * (load_delta - idle_time_delta) / (float)load_delta;
 
     sprintf(cpu_output, "%.1f%%", cpu_usage);
+}
+
+void set_date(const char *date_format, char date_output[MAX_DATE_OUTPUT])
+{
+    static time_t current_time;
+    current_time = time(NULL);
+
+    strftime(date_output, MAX_DATE_OUTPUT,
+             date_format, localtime(&current_time));
+}
+
+void set_time_icon(void)
+{
+    /* Provide consistent spacing between the time icon and time value */
+    /* for both single and double digit times throughout the day. */
+    /* All double digit times are prefixed with an empty space. */
+    time_icon = time_output[0] != ' ' ? TIME_ICON_WITH_SPACE :
+                                        TIME_ICON;
 }
 
 void set_disk_space_output(void)
@@ -195,6 +187,20 @@ void set_disk_space_output(void)
     sprintf(disk_space_output, "%i/%iG",
             (int)(used_bytes / GIGABYTE + 0.5),
             (int)(total_bytes / GIGABYTE + 0.5));
+}
+
+void set_memory_output(void)
+{
+    static float memory_used, total_memory;
+    static struct sysinfo sys_info;
+    sysinfo(&sys_info);
+
+    memory_used = (sys_info.totalram - sys_info.freeram) / GIGABYTE;
+    total_memory = sys_info.totalram / GIGABYTE;
+
+    sprintf(memory_output, "%i/%iG",
+            (int)(memory_used + 0.5),
+            (int)(total_memory + 0.5));
 }
 
 void set_volume_and_icon(void)
@@ -283,38 +289,7 @@ void set_wifi_output(void)
     /* Convert to a meaningful percentage value appropriate for output */
     wifi_strength = atoi(wifi_data) * 100 / 70;
 
-    sprintf(wifi_output, " %s %i%% ", wifi_icon, wifi_strength);
-}
-
-void set_battery_icon(void)
-{
-    switch ((int)(battery_output + 0.5))
-    {
-        case 90 ... 100:
-            battery_icon = BATTERY_ICON_FULL;
-            break;
-        case 60 ... 89:
-            battery_icon = BATTERY_ICON_THREE_QUARTERS;
-            break;
-        case 30 ... 59:
-            battery_icon = BATTERY_ICON_HALF;
-            break;
-        case 10 ... 29:
-            battery_icon = BATTERY_ICON_QUARTER;
-            break;
-        default:
-            battery_icon = BATTERY_ICON_EMPTY;
-            break;
-    }
-}
-
-void set_time_icon(void)
-{
-    /* Provide consistent spacing between the time icon and time value */
-    /* for both single and double digit times throughout the day. */
-    /* All double digit times are prefixed with an empty space. */
-    time_icon = time_output[0] != ' ' ? TIME_ICON_WITH_SPACE :
-                                        TIME_ICON;
+    sprintf(wifi_output, " %s %i%% ", WIFI_ICON, wifi_strength);
 }
 
 void set_status(void)
