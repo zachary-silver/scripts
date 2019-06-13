@@ -59,7 +59,7 @@ infinite_loop:
 
 float get_batteries(void)
 {
-    static float bat0, bat1;
+    float bat0, bat1;
 
     bat0 = get_battery(ENERGY_NOW_FILE_BAT0, ENERGY_FULL_FILE_BAT0);
     bat1 = get_battery(ENERGY_NOW_FILE_BAT1, ENERGY_FULL_FILE_BAT1);
@@ -69,22 +69,16 @@ float get_batteries(void)
 
 float get_battery(const char *energy_now_file, const char *energy_full_file)
 {
-    static float energy_now, energy_full;
-    static FILE *fd;
+    float energy_now, energy_full;
+    FILE *fd;
 
     fd = fopen(energy_full_file, "r");
-    if (fd == NULL)
-    {
-        return -1;
-    }
+    if (fd == NULL) { return -1; }
     fscanf(fd, "%f", &energy_full);
     fclose(fd);
 
     fd = fopen(energy_now_file, "r");
-    if (fd == NULL)
-    {
-        return -1;
-    }
+    if (fd == NULL) { return -1; }
     fscanf(fd, "%f", &energy_now);
     fclose(fd);
 
@@ -115,18 +109,14 @@ void set_battery_icon(void)
 
 void set_cpu_output(void)
 {
-    static long int curr_load[7] = {}, prev_load_idle,
-                    curr_load_sum, prev_load_sum,
-                    load_delta, idle_time_delta;
-    static float cpu_usage;
-    static int i;
-    static FILE *fd;
+    static long int prev_load_idle, prev_load_sum, curr_load_sum;
+    long int curr_load[7], load_delta, idle_time_delta;
+    float cpu_usage;
+    int i;
+    FILE *fd;
 
     fd = fopen("/proc/stat","r");
-    if (fd == NULL)
-    {
-        return;
-    }
+    if (fd == NULL) { return; }
     /* Ignore first column which only contains the string 'cpu' */
     /* and read the rest of the cpu load information */
     fscanf(fd, "%*s %li %li %li %li %li %li %li",
@@ -136,7 +126,10 @@ void set_cpu_output(void)
            &curr_load[6]);
     fclose(fd);
 
-    for (i = 0, prev_load_sum = curr_load_sum, curr_load_sum = 0; i < 7; i++)
+    prev_load_sum = curr_load_sum;
+    curr_load_sum = 0;
+
+    for (i = 0; i < LENGTHOF(curr_load); i++)
     {
         curr_load_sum += curr_load[i];
     }
@@ -156,8 +149,7 @@ void set_cpu_output(void)
 
 void set_date(const char *date_format, char date_output[MAX_DATE_OUTPUT])
 {
-    static time_t current_time;
-    current_time = time(NULL);
+    time_t current_time = time(NULL);
 
     strftime(date_output, MAX_DATE_OUTPUT,
              date_format, localtime(&current_time));
@@ -174,13 +166,11 @@ void set_time_icon(void)
 
 void set_disk_space_output(void)
 {
-    static unsigned long total_bytes, used_bytes;
-    static struct statvfs disk_info;
+    unsigned long total_bytes, used_bytes;
+    struct statvfs disk_info;
 
-    if (statvfs("/", &disk_info) < 0)
-    {
-        return;
-    }
+    if (statvfs("/", &disk_info) < 0) { return; }
+
     total_bytes = disk_info.f_blocks * disk_info.f_bsize;
     used_bytes = total_bytes - (disk_info.f_bfree * disk_info.f_bsize);
 
@@ -191,9 +181,10 @@ void set_disk_space_output(void)
 
 void set_memory_output(void)
 {
-    static float memory_used, total_memory;
-    static struct sysinfo sys_info;
-    sysinfo(&sys_info);
+    float memory_used, total_memory;
+    struct sysinfo sys_info;
+
+    if (sysinfo(&sys_info) < 0) { return; }
 
     memory_used = (sys_info.totalram - sys_info.freeram) / GIGABYTE;
     total_memory = sys_info.totalram / GIGABYTE;
@@ -210,11 +201,11 @@ void set_volume_and_icon(void)
     static const snd_mixer_selem_channel_id_t mixer_channel = SND_MIXER_SCHN_MONO;
     static const char *sound_card = "default";
     static const char *selem_name = "Master";
-    static snd_mixer_t *handle;
-    static snd_mixer_selem_id_t *sid;
-    static snd_mixer_elem_t* elem;
-    static long min, max, volume;
-    static int playback_active;
+    snd_mixer_t *handle;
+    snd_mixer_selem_id_t *sid;
+    snd_mixer_elem_t* elem;
+    long min, max, volume;
+    int playback_active;
 
     snd_mixer_open(&handle, 0);
 
@@ -240,6 +231,7 @@ void set_volume_and_icon(void)
 
     /* Convert value to percentage appropriate for output */
     volume = (double)volume / max * 100 + 0.5;
+
     sprintf(volume_output, "%i%%", (int)volume);
 
     volume_icon = playback_active == TRUE ? SPEAKER_ICON_UNMUTED :
@@ -248,15 +240,12 @@ void set_volume_and_icon(void)
 
 void set_wifi_output(void)
 {
-    static char wifi_data[MAX_BUFFER_SIZE], *wifi_data_ptr;
-    static int wifi_strength, i, j;
-    static FILE *fd;
+    char wifi_data[MAX_BUFFER_SIZE], *wifi_data_ptr;
+    int wifi_strength, i = 0, j = 0;
+    FILE *fd;
 
     fd = fopen("/proc/net/wireless", "r");
-    if (fd == NULL)
-    {
-        return;
-    }
+    if (fd == NULL) { return; }
     /* Desired wireless interface data exists on the 3rd line of output */
     for (i = 0; i < 3; i++)
     {
@@ -273,14 +262,14 @@ void set_wifi_output(void)
 
     /* The first '.' indicates the end of the
      * link quality value which is what we want */
-    for (i = 0; wifi_data[i] != '.'; i++);
+    while (wifi_data[i] != '.') { i++; }
 
     /* Step backwards to the beginning of the value */
-    for (i--; wifi_data[i] != ' '; i--);
+    do { i--; } while (wifi_data[i] != ' ');
 
     /* Insert link quality value characters at the beginning of our buffer */
     /* and append null terminator so we can convert to an integer */
-    for (j = 0, i++; wifi_data[i] != '.'; i++, j++)
+    for (i++; wifi_data[i] != '.'; i++, j++)
     {
         wifi_data[j] = wifi_data[i];
     }
