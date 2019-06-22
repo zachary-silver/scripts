@@ -16,7 +16,7 @@
 #define MAX_DATE_OUTPUT 64
 #define MAX_SONG_OUTPUT 58
 #define MAX_JSON_VALUE_OUTPUT 64
-#define LENGTHOF(x) (int)(sizeof(x) / sizeof((x)[0]))
+#define LENGTH_OF(x) (int)(sizeof(x) / sizeof((x)[0]))
 
 /* Global constants */
 static const char   *PAUSE_ICON = "";
