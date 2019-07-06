@@ -1,8 +1,5 @@
 #!/bin/bash
 
-lock()
-{
-	$HOME/.scripts/lock.sh
-}
+lock_script=$HOME/.scripts/lock.sh
 
-lock && sleep .5 && systemctl suspend
+$lock_script && sleep .5 && systemctl suspend

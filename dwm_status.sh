@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # get_battery() requires acpi to work
-# get_cpu_usage() requires mpstat package to work
-# get_song() requires jq package to work
+# get_cpu_usage() requires mpstat to work
+# get_song() requires jq to work
 
 get_battery()
 {
@@ -217,12 +217,12 @@ if get_battery ; then 	# laptop
 	while true;
 	do
 		xsetroot -name "$(get_song)   $(get_wifi)  $(get_volume)  $(get_battery)  $(get_date)  $(get_time)"
-		sleep 1.0;
+		sleep 1;
 	done;
 else 			# desktop
 	while true;
 	do
 		xsetroot -name "$(get_song)   $(get_volume)  $(get_date)  $(get_time)"
-		sleep 0.3;
+		sleep 1;
 	done;
 fi

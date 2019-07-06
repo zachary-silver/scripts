@@ -14,7 +14,4 @@ fi
 
 touch "$1.new"
 
-## awk or sed methods. Both work the same
-
-#awk '$1=$1' "$1" > "$1.new"
 sed -r 's/^[[:blank:]]+//' "$1" > "$1.new"

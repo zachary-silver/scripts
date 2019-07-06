@@ -77,8 +77,7 @@ void set_song_output(char song_output[MAX_SONG_OUTPUT])
 
     if (song_playing[0] == 't') {
         start = concat_strings(song_output, PLAY_ICON, start);
-    }
-    else {
+    } else {
         start = concat_strings(song_output, PAUSE_ICON, start);
     }
 
