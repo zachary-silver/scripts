@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export _JAVA_AWT_WM_NONREPARENTING=1
+(~/.bin/idea-IC-192.6817.14/bin/idea.sh &)
+exit
