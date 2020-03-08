@@ -286,6 +286,7 @@ void setCPU(dwmCPU *cpu)
            &loadInfo[4], &loadInfo[5], &loadInfo[6]);
     fclose(fd);
 
+    loadJiffies = 0;
     idleJiffies = loadInfo[CPU_LOAD_IDLE_COLUMN];
     for (i = 0; i < CPU_LOAD_INFO_COLUMNS; i++) {
         loadJiffies += loadInfo[i];
@@ -293,8 +294,8 @@ void setCPU(dwmCPU *cpu)
 
     loadDelta = cpu->loadJiffies < loadJiffies ? loadJiffies - cpu->loadJiffies
                                                : cpu->loadJiffies - loadJiffies;
-    idleDelta = idleJiffies < cpu->idleJiffies ? cpu->idleJiffies - idleJiffies
-                                               : idleJiffies - cpu->idleJiffies;
+    idleDelta = cpu->idleJiffies < idleJiffies ? idleJiffies - cpu->idleJiffies
+                                               : cpu->idleJiffies - idleJiffies;
 
     cpu->loadJiffies = loadJiffies;
     cpu->idleJiffies = idleJiffies;
