@@ -1,13 +1,13 @@
 CC=gcc
 CFLAGS=-I.
-DEPS = dwm_status.h
-OBJ = dwm_status.o gpmdp.o
+DEPS=dwmstatus.h
+OBJ=dwmstatus.o gpmdp.o io.o
 LIBS=-lX11 -lasound
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-dwm_status: $(OBJ)
+dwmstatus: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 .PHONY: clean
