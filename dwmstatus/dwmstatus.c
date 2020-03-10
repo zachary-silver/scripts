@@ -211,22 +211,22 @@ void setOutput(dwmStatus *status)
 
 /*
  * In conditions where values can't be read from files
- * and added to appropriate variables,
- * battery active will be set to false;
+ * and added to appropriate variables, battery active
+ * will be set to false.
  */
 void setBattery(dwmBattery *battery)
 {
-    int i, batteries = LENGTH_OF(CurrentBatteryFiles);
+    int i, batteryCount = LENGTH_OF(CurrentBatteryFiles);
 
     battery->currentWh = 0;
     battery->capacityWh = 1;
 
-    for (i = 0; i < batteries; i++) {
+    for (i = 0; i < batteryCount; i++) {
         battery->currentWh += getBatteryValue(CurrentBatteryFiles[i]);
         battery->capacityWh += getBatteryValue(CapacityBatteryFiles[i]);
     }
 
-    battery->active = battery->capacityWh > 0;
+    battery->active = battery->capacityWh > 1;
     battery->percent = ((double)battery->currentWh / battery->capacityWh) * 100;
 }
 
@@ -286,6 +286,7 @@ void setCPU(dwmCPU *cpu)
            &loadInfo[4], &loadInfo[5], &loadInfo[6]);
     fclose(fd);
 
+    loadJiffies = 0;
     idleJiffies = loadInfo[CPU_LOAD_IDLE_COLUMN];
     for (i = 0; i < CPU_LOAD_INFO_COLUMNS; i++) {
         loadJiffies += loadInfo[i];
@@ -293,8 +294,8 @@ void setCPU(dwmCPU *cpu)
 
     loadDelta = cpu->loadJiffies < loadJiffies ? loadJiffies - cpu->loadJiffies
                                                : cpu->loadJiffies - loadJiffies;
-    idleDelta = idleJiffies < cpu->idleJiffies ? cpu->idleJiffies - idleJiffies
-                                               : idleJiffies - cpu->idleJiffies;
+    idleDelta = cpu->idleJiffies < idleJiffies ? idleJiffies - cpu->idleJiffies
+                                               : cpu->idleJiffies - idleJiffies;
 
     cpu->loadJiffies = loadJiffies;
     cpu->idleJiffies = idleJiffies;
@@ -407,16 +408,21 @@ void setWifi(dwmWifi *wifi)
     }
 
     wifiInfo[bytesRead] = '\0';
-    interfaceInfo = strstr(wifiInfo, WirelessInterface);
-    if (interfaceInfo == NULL) {
+
+    if ((interfaceInfo = strstr(wifiInfo, WirelessInterface)) == NULL) {
         wifi->active = FALSE;
         return;
     }
 
-    wifi->active = TRUE;
     wifi->strength = getQualityLinkValue(interfaceInfo) * 100 / 70.0;
+    wifi->active = TRUE;
 }
 
+/*
+ * Each call to strtok retrieves the data in the
+ * next column pointed to by interfaceInfo.
+ * The third column is the quality link value.
+ */
 int getQualityLinkValue(char *interfaceInfo)
 {
     char *result;

@@ -56,24 +56,21 @@ void setSong(dwmSong *song)
     value = queryValue(song->output, query);
     setValue(song, query++, value);
     while (query <= Total) {
-        value = queryValue(NULL, query);
+        value = queryValue(value + strlen(value) + 1, query);
         setValue(song, query++, value);
     }
 }
 
 char *queryValue(char *jsonData, SongQuery query)
 {
-    char *result = strtok(jsonData, JSON_TOKEN_DELIMS);
-
-    while (strcmp(result, SongQueries[query])) {
-       result = strtok(NULL, JSON_TOKEN_DELIMS);
-    }
+    char *result = strstr(jsonData, SongQueries[query]);
+    result = strstr(result, ":");
 
     if (query == Artist || query == Title) {
-      result = strtok(NULL, "\"");
-      result = strtok(NULL, "\"");
+        result = strtok(result, "\"");
+        result = strtok(NULL, "\"");
     } else {
-      result = strtok(NULL, JSON_TOKEN_DELIMS);
+        result = strtok(result, JSON_TOKEN_DELIMS);
     }
 
     return result;
