@@ -186,22 +186,32 @@ loop:
 
 void setOutput(dwmStatus *status)
 {
-    int volume, usedMemory, totalMemory, usedDisk, totalDisk;
+    int volume, usedMemory, totalMemory, usedDisk, totalDisk, outputLength;
+
     volume = status->volume.percent + 0.5;
     usedMemory = status->memory.usedBytes / Gigabyte + 0.5;
     totalMemory = status->memory.totalBytes / Gigabyte + 0.5;
     usedDisk = status->disk.usedBytes / Gigabyte + 0.5;
     totalDisk = status->disk.totalBytes / Gigabyte + 0.5;
 
-    snprintf(status->output, MAX_STATUS_OUTPUT,
-             "%s  %s %.1f%%  %s %.1f%%  %s %d/%dG  %s %d/%dG  ",
-             status->song.output,
-             status->wifi.icon, status->wifi.strength,
+    snprintf(status->output, MAX_STATUS_OUTPUT, "%s  ", status->song.output);
+
+    if (status->wifi.active) {
+        outputLength = strlen(status->output);
+        snprintf(status->output + outputLength,
+                 MAX_STATUS_OUTPUT - outputLength,
+                 "%s %.1f%%  ", status->wifi.icon, status->wifi.strength);
+    }
+
+    outputLength = strlen(status->output);
+    snprintf(status->output + outputLength, MAX_STATUS_OUTPUT - outputLength,
+             "%s %.1f%%  %s %d/%dG  %s %d/%dG  ",
              status->cpu.icon, status->cpu.utilization,
              status->memory.icon, usedMemory, totalMemory,
              status->disk.icon, usedDisk, totalDisk);
 
-    snprintf(status->output + strlen(status->output), MAX_STATUS_OUTPUT,
+    outputLength = strlen(status->output);
+    snprintf(status->output + outputLength, MAX_STATUS_OUTPUT - outputLength,
              "%s %d%%  %s %.0f%%  %s %s  %s%s",
              status->volume.icon, volume,
              status->battery.icon, status->battery.percent,
