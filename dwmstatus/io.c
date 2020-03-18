@@ -16,13 +16,11 @@ int openFile(const char *fileName, char mode) {
    if (mode == 'r') {
       flags = O_RDONLY;
       actualMode = 0600;
-   }
-   else if (mode == 'w') {
+   } else if (mode == 'w') {
       flags = O_WRONLY | O_CREAT | O_TRUNC;
       actualMode = 0666;
-   }
-   else {
-      handleError("cpBuffered: Unkown openFile mode");
+   } else {
+      handleError("dwmstatus: Unkown openFile mode");
    }
 
    if ((fd = open(fileName, flags, actualMode)) == -1) {

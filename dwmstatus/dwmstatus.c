@@ -1,107 +1,29 @@
 /* Compile with -lX11 and -lasound flags */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <time.h>
 #include <alsa/asoundlib.h>
 #include <alsa/control.h>
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
-#include <X11/Xlib.h>
 
 #include "dwmstatus.h"
 #include "io.h"
 
 /* Macros */
+#define TRUE 1
+#define FALSE 0
 #define CPU_LOAD_INFO_COLUMNS 7
 #define CPU_LOAD_IDLE_COLUMN 3
-#define MAX_SONG_TIME_OUTPUT 6
 #define MAX_BUFFER_SIZE 1024
-#define MAX_STATUS_OUTPUT 512
-#define MAX_ARTIST_OUTPUT 64
-#define MAX_TITLE_OUTPUT 64
-#define MAX_SONG_OUTPUT 64
 #define MAX_MEMORY_OUTPUT 8
 #define MAX_VOLUME_OUTPUT 8
-#define MAX_DATE_OUTPUT 32
-#define MAX_TIME_OUTPUT 16
 #define MAX_WIFI_OUTPUT 16
 #define MAX_DISK_OUTPUT 16
 #define MAX_CPU_OUTPUT 16
 #define LENGTH_OF(x) (int)(sizeof(x) / sizeof((x)[0]))
 
-/* Typedefs */
-typedef struct {
-    int active;
-    float strength;
-    const char *icon;
-} dwmWifi;
-
-typedef struct {
-   int active;
-   float percent;
-   unsigned long currentWh;
-   unsigned long capacityWh;
-   const char *icon;
-} dwmBattery;
-
-typedef struct {
-   float utilization;
-   unsigned long idleJiffies;
-   unsigned long loadJiffies;
-   const char *icon;
-} dwmCPU;
-
-typedef struct {
-    char output[MAX_DATE_OUTPUT];
-    const char *format;
-    const char *icon;
-} dwmDate, dwmTime;
-
-typedef struct {
-    unsigned long usedBytes;
-    unsigned long totalBytes;
-    const char *icon;
-} dwmDisk;
-
-typedef struct {
-    unsigned long usedBytes;
-    unsigned long totalBytes;
-    const char *icon;
-} dwmMemory;
-
-typedef struct {
-    float percent;
-    long current;
-    long min;
-    long max;
-    int muted;
-    const char *icon;
-} dwmVolume;
-
-typedef struct {
-   Display *display;
-   dwmBattery battery;
-   dwmMemory memory;
-   dwmVolume volume;
-   dwmDate date;
-   dwmTime time;
-   dwmDisk disk;
-   dwmSong song;
-   dwmWifi wifi;
-   dwmCPU cpu;
-   char output[MAX_STATUS_OUTPUT];
-} dwmStatus;
-
 /* Constants */
-static const struct timespec SleepTime = { .tv_sec = 1, .tv_nsec = 000000000 };
-static const float           Gigabyte = 1024 * 1024 * 1024;
-static const char *const     PauseIcon = "";
-static const char *const     PlayIcon = "";
-static const char *const     StopIcon = "";
-static const char *const     LikedIcon = "";
-static const char *const     DislikedIcon = "";
 static const char *const     WifiIcon = "";
 static const char *const     MemoryIcon = "";
 static const char *const     DiskIcon = "";
@@ -130,94 +52,9 @@ static const char *const     CapacityBatteryFiles[] =
    "/sys/class/power_supply/BAT1/energy_full",
 };
 
-/* Function declarations */
+/* Function prototypes */
 unsigned long getBatteryValue(const char *fileName);
 int getQualityLinkValue(char *wirelessInterfaceInfo);
-void output(dwmStatus *status);
-void setOutput(dwmStatus *status);
-void setBattery(dwmBattery *battery);
-void setBatteryIcon(dwmBattery *battery);
-void setMemory(dwmMemory *memory);
-void setVolume(dwmVolume *volume);
-void setVolumeIcon(dwmVolume *volume);
-void setWifi(dwmWifi *wifi);
-void setCPU(dwmCPU *cpu);
-void setDisk(dwmDisk *disk);
-void setSongIcons(dwmSong *song);
-void setSongOutput(dwmSong *song);
-void setDate(dwmDate *date);
-void setTime(dwmTime *time);
-void setTimeIcon(dwmTime *time);
-
-int main(void)
-{
-    dwmStatus status = { 0 };
-    status.display = XOpenDisplay(NULL);
-    status.date.icon = DateIcon;
-    status.wifi.icon = WifiIcon;
-    status.disk.icon = DiskIcon;
-    status.memory.icon = MemoryIcon;
-    status.cpu.icon = CPUIcon;
-    status.date.format = DateFormat;
-    status.time.format = TimeFormat;
-
-loop:
-    setDate(&status.date);
-    setTime(&status.time);
-    setTimeIcon(&status.time);
-    setBattery(&status.battery);
-    setBatteryIcon(&status.battery);
-    setVolume(&status.volume);
-    setVolumeIcon(&status.volume);
-    setMemory(&status.memory);
-    setDisk(&status.disk);
-    setCPU(&status.cpu);
-    setWifi(&status.wifi);
-    setSong(&status.song);
-    setSongIcons(&status.song);
-    setSongOutput(&status.song);
-    setOutput(&status);
-
-    output(&status);
-
-    nanosleep(&SleepTime, NULL);
-    goto loop;
-}
-
-void setOutput(dwmStatus *status)
-{
-    int volume, usedMemory, totalMemory, usedDisk, totalDisk, outputLength;
-
-    volume = status->volume.percent + 0.5;
-    usedMemory = status->memory.usedBytes / Gigabyte + 0.5;
-    totalMemory = status->memory.totalBytes / Gigabyte + 0.5;
-    usedDisk = status->disk.usedBytes / Gigabyte + 0.5;
-    totalDisk = status->disk.totalBytes / Gigabyte + 0.5;
-
-    snprintf(status->output, MAX_STATUS_OUTPUT, "%s  ", status->song.output);
-
-    if (status->wifi.active) {
-        outputLength = strlen(status->output);
-        snprintf(status->output + outputLength,
-                 MAX_STATUS_OUTPUT - outputLength,
-                 "%s %.1f%%  ", status->wifi.icon, status->wifi.strength);
-    }
-
-    outputLength = strlen(status->output);
-    snprintf(status->output + outputLength, MAX_STATUS_OUTPUT - outputLength,
-             "%s %.1f%%  %s %d/%dG  %s %d/%dG  ",
-             status->cpu.icon, status->cpu.utilization,
-             status->memory.icon, usedMemory, totalMemory,
-             status->disk.icon, usedDisk, totalDisk);
-
-    outputLength = strlen(status->output);
-    snprintf(status->output + outputLength, MAX_STATUS_OUTPUT - outputLength,
-             "%s %d%%  %s %.0f%%  %s %s  %s%s",
-             status->volume.icon, volume,
-             status->battery.icon, status->battery.percent,
-             status->date.icon, status->date.output,
-             status->time.icon, status->time.output);
-}
 
 /*
  * In conditions where values can't be read from files
@@ -312,17 +149,14 @@ void setCPU(dwmCPU *cpu)
     cpu->utilization = 100 * (loadDelta - idleDelta) / (float)loadDelta;
 }
 
+void setCPUIcon(dwmCPU *cpu)
+{
+    cpu->icon = CPUIcon;
+}
+
 void setTime(dwmTime *time)
 {
    setDate(time);
-}
-
-void setDate(dwmDate *date)
-{
-    time_t currentTime = time(NULL);
-
-    strftime(date->output, MAX_DATE_OUTPUT,
-             date->format, localtime(&currentTime));
 }
 
 /*
@@ -333,6 +167,29 @@ void setDate(dwmDate *date)
 void setTimeIcon(dwmTime *time)
 {
     time->icon = time->output[0] != ' ' ? TimeIconWithSpace : TimeIcon;
+}
+
+void setTimeFormat(dwmTime *time)
+{
+    time->format = TimeFormat;
+}
+
+void setDate(dwmDate *date)
+{
+    time_t currentTime = time(NULL);
+
+    strftime(date->output, MAX_DATE_OUTPUT,
+             date->format, localtime(&currentTime));
+}
+
+void setDateIcon(dwmDate *date)
+{
+    date->icon = DateIcon;
+}
+
+void setDateFormat(dwmDate *date)
+{
+    date->format = DateFormat;
 }
 
 void setDisk(dwmDisk *disk)
@@ -347,6 +204,11 @@ void setDisk(dwmDisk *disk)
     disk->usedBytes = disk->totalBytes - (diskInfo.f_bfree * diskInfo.f_bsize);
 }
 
+void setDiskIcon(dwmDisk *disk)
+{
+    disk->icon = DiskIcon;
+}
+
 void setMemory(dwmMemory *memory)
 {
     struct sysinfo sysInfo;
@@ -357,6 +219,11 @@ void setMemory(dwmMemory *memory)
 
     memory->usedBytes = (sysInfo.totalram - sysInfo.freeram);
     memory->totalBytes = sysInfo.totalram;
+}
+
+void setMemoryIcon(dwmMemory *memory)
+{
+    memory->icon = MemoryIcon;
 }
 
 /*
@@ -424,8 +291,8 @@ void setWifi(dwmWifi *wifi)
         return;
     }
 
-    wifi->strength = getQualityLinkValue(interfaceInfo) * 100 / 70.0;
     wifi->active = TRUE;
+    wifi->strength = getQualityLinkValue(interfaceInfo) * 100 / 70.0;
 }
 
 /*
@@ -444,41 +311,9 @@ int getQualityLinkValue(char *interfaceInfo)
     return atoi(result);
 }
 
-void setSongIcons(dwmSong *song)
+void setWifiIcon(dwmWifi *wifi)
 {
-    if (song->liked) {
-        song->likeIcon = LikedIcon;
-    } else if (song->disliked) {
-        song->likeIcon = DislikedIcon;
-    } else {
-        song->likeIcon = "";
-    }
-
-    song->playIcon = song->playing ? PlayIcon : PauseIcon;
-}
-
-void setSongOutput(dwmSong *song)
-{
-    unsigned int secondsLeft, maxLength;
-
-    if (!song->active) {
-        (song->output)[0] = '\0';
-        return;
-    }
-
-    snprintf(song->output, MAX_SONG_OUTPUT, "%s%s%s %s - %s",
-             song->playIcon, (song->likeIcon)[0] != '\0' ? " " : "",
-             song->likeIcon, song->artist, song->title);
-
-    /* -2 to include room for space and null terminator */
-    maxLength = MAX_SONG_OUTPUT - MAX_SONG_TIME_OUTPUT - 2;
-    if (strlen(song->output) > maxLength) {
-        strcpy(song->output + maxLength - 3, "...");
-    }
-
-    secondsLeft = song->totalSeconds - song->currentSeconds;
-    snprintf(song->output + strlen(song->output), MAX_SONG_TIME_OUTPUT + 2,
-             " %d:%02d", secondsLeft / 60, secondsLeft % 60);
+    wifi->icon = WifiIcon;
 }
 
 /*

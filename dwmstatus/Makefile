@@ -1,16 +1,19 @@
-CC=gcc
-CFLAGS=-I.
-DEPS=dwmstatus.h
-OBJ=dwmstatus.o gpmdp.o io.o
-LIBS=-lX11 -lasound
+TARGET   = dwmstatus
+CC       = gcc
+CCFLAGS  = -Werror
+LDFLAGS  = -lm
+LIBS	 = -lX11 -lasound
+SOURCES  = $(wildcard *.c)
+INCLUDES = $(wildcard *.h)
+OBJECTS  = $(SOURCES:.c=.o)
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+all:$(TARGET)
 
-dwmstatus: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+$(TARGET):$(OBJECTS)
+	$(CC) -o $(TARGET) $(LDFLAGS) $(OBJECTS) $(LIBS)
 
-.PHONY: clean
+$(OBJECTS):$(SOURCES) $(INCLUDES)
+	$(CC) -c $(CCFLAGS) $(SOURCES)
 
 clean:
-	rm *.o
+	rm -f $(OBJECTS)
