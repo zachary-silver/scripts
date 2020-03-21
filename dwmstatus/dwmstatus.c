@@ -33,7 +33,7 @@ static const char *const     SpeakerIconMuted = "";
 static const char *const     DateIcon = "";
 static const char *const     TimeIcon = "";
 static const char *const     TimeIconWithSpace = " ";
-static const char *const     BatteryIconCharging = "";
+static const char *const     BatteryIconCharging = "";
 static const char *const     BatteryIcon100 = "";
 static const char *const     BatteryIcon75 = "";
 static const char *const     BatteryIcon50 = "";
@@ -52,8 +52,11 @@ static const char *const     CapacityBatteryFiles[] =
    "/sys/class/power_supply/BAT0/energy_full",
    "/sys/class/power_supply/BAT1/energy_full",
 };
-static const char *const     StatusBatteryFile =
-   "/sys/class/power_supply/BAT0/status";
+static const char *const     StatusBatteryFiles[] =
+{
+   "/sys/class/power_supply/BAT0/status",
+   "/sys/class/power_supply/BAT1/status",
+};
 
 /* Function prototypes */
 int batteryCharging(const char *fileName);
@@ -71,14 +74,18 @@ void setBattery(dwmBattery *battery)
 
     battery->currentWh = 0;
     battery->capacityWh = 1;
+    battery->charging = FALSE;
 
     for (i = 0; i < batteryCount; i++) {
         battery->currentWh += getBatteryValue(CurrentBatteryFiles[i]);
         battery->capacityWh += getBatteryValue(CapacityBatteryFiles[i]);
     }
 
+    for (i = 0; i < batteryCount && !(battery->charging); i++) {
+        battery->charging = batteryCharging(StatusBatteryFiles[i]);
+    }
+
     battery->active = battery->capacityWh > 1;
-    battery->charging = batteryCharging(StatusBatteryFile);
     battery->percent = ((double)battery->currentWh / battery->capacityWh) * 100;
 }
 
@@ -105,12 +112,12 @@ int batteryCharging(const char *fileName)
     closeFile(fd);
 
     if (bytesRead < 0) {
-        return 0;
+        return FALSE;
     }
 
     buffer[bytesRead] = '\0';
 
-    return strcmp(buffer, "Discharging\n") != 0;
+    return strcmp(buffer, "Charging\n") == 0;
 }
 
 void setBatteryIcon(dwmBattery *battery)
