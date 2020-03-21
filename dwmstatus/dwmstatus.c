@@ -33,6 +33,7 @@ static const char *const     SpeakerIconMuted = "";
 static const char *const     DateIcon = "";
 static const char *const     TimeIcon = "";
 static const char *const     TimeIconWithSpace = " ";
+static const char *const     BatteryIconCharging = "";
 static const char *const     BatteryIcon100 = "";
 static const char *const     BatteryIcon75 = "";
 static const char *const     BatteryIcon50 = "";
@@ -51,8 +52,11 @@ static const char *const     CapacityBatteryFiles[] =
    "/sys/class/power_supply/BAT0/energy_full",
    "/sys/class/power_supply/BAT1/energy_full",
 };
+static const char *const     StatusBatteryFile =
+   "/sys/class/power_supply/BAT0/status";
 
 /* Function prototypes */
+int batteryCharging(const char *fileName);
 unsigned long getBatteryValue(const char *fileName);
 int getQualityLinkValue(char *wirelessInterfaceInfo);
 
@@ -74,6 +78,7 @@ void setBattery(dwmBattery *battery)
     }
 
     battery->active = battery->capacityWh > 1;
+    battery->charging = batteryCharging(StatusBatteryFile);
     battery->percent = ((double)battery->currentWh / battery->capacityWh) * 100;
 }
 
@@ -90,24 +95,46 @@ unsigned long getBatteryValue(const char *fileName)
     return value;
 }
 
+int batteryCharging(const char *fileName)
+{
+    char buffer[MAX_BUFFER_SIZE];
+    int fd, bytesRead;
+
+    fd = openFile(fileName, 'r');
+    bytesRead = read(fd, buffer, MAX_BUFFER_SIZE - 1);
+    closeFile(fd);
+
+    if (bytesRead < 0) {
+        return 0;
+    }
+
+    buffer[bytesRead] = '\0';
+
+    return strcmp(buffer, "Discharging\n") != 0;
+}
+
 void setBatteryIcon(dwmBattery *battery)
 {
-    switch ((int)battery->percent) {
-    case 90 ... 100:
-        battery->icon = BatteryIcon100;
-        break;
-    case 60 ... 89:
-        battery->icon = BatteryIcon75;
-        break;
-    case 30 ... 59:
-        battery->icon = BatteryIcon50;
-        break;
-    case 10 ... 29:
-        battery->icon = BatteryIcon25;
-        break;
-    default:
-        battery->icon = BatteryIcon0;
-        break;
+    if (battery->charging) {
+        battery->icon = BatteryIconCharging;
+    } else {
+        switch ((int)battery->percent) {
+        case 90 ... 100:
+            battery->icon = BatteryIcon100;
+            break;
+        case 60 ... 89:
+            battery->icon = BatteryIcon75;
+            break;
+        case 30 ... 59:
+            battery->icon = BatteryIcon50;
+            break;
+        case 10 ... 29:
+            battery->icon = BatteryIcon25;
+            break;
+        default:
+            battery->icon = BatteryIcon0;
+            break;
+        }
     }
 }
 

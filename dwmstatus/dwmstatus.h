@@ -16,6 +16,7 @@ typedef struct {
 
 typedef struct {
    int active;
+   int charging;
    float percent;
    unsigned long currentWh;
    unsigned long capacityWh;
