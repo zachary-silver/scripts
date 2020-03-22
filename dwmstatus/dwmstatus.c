@@ -16,6 +16,7 @@
 #define CPU_LOAD_INFO_COLUMNS 7
 #define CPU_LOAD_IDLE_COLUMN 3
 #define MAX_BUFFER_SIZE 1024
+#define MAX_CHARGING_BUFFER 32
 #define MAX_MEMORY_OUTPUT 8
 #define MAX_VOLUME_OUTPUT 8
 #define MAX_WIFI_OUTPUT 16
@@ -24,43 +25,43 @@
 #define LENGTH_OF(x) (int)(sizeof(x) / sizeof((x)[0]))
 
 /* Constants */
-static const char *const     WifiIcon = "";
-static const char *const     MemoryIcon = "";
-static const char *const     DiskIcon = "";
-static const char *const     CPUIcon = "";
-static const char *const     SpeakerIconUnmuted = "";
-static const char *const     SpeakerIconMuted = "";
-static const char *const     DateIcon = "";
-static const char *const     TimeIcon = "";
-static const char *const     TimeIconWithSpace = " ";
-static const char *const     BatteryIconCharging = "";
-static const char *const     BatteryIcon100 = "";
-static const char *const     BatteryIcon75 = "";
-static const char *const     BatteryIcon50 = "";
-static const char *const     BatteryIcon25 = "";
-static const char *const     BatteryIcon0 = "";
-static const char *const     TimeFormat = "%l:%M %p";
-static const char *const     DateFormat = "%a %b/%d/%Y";
-static const char *const     WirelessInterface = "wlp4s0";
-static const char *const     CurrentBatteryFiles[] =
+static const char *const WifiIcon = "";
+static const char *const MemoryIcon = "";
+static const char *const DiskIcon = "";
+static const char *const CPUIcon = "";
+static const char *const SpeakerIconUnmuted = "";
+static const char *const SpeakerIconMuted = "";
+static const char *const DateIcon = "";
+static const char *const TimeIcon = "";
+static const char *const TimeIconWithSpace = " ";
+static const char *const BatteryIconCharging = "";
+static const char *const BatteryIcon100 = "";
+static const char *const BatteryIcon75 = "";
+static const char *const BatteryIcon50 = "";
+static const char *const BatteryIcon25 = "";
+static const char *const BatteryIcon0 = "";
+static const char *const TimeFormat = "%l:%M %p";
+static const char *const DateFormat = "%a %b/%d/%Y";
+static const char *const WirelessInterface = "wlp4s0";
+static const char *const CurrentBatteryFiles[] =
 {
    "/sys/class/power_supply/BAT0/energy_now",
    "/sys/class/power_supply/BAT1/energy_now",
 };
-static const char *const     CapacityBatteryFiles[] =
+static const char *const CapacityBatteryFiles[] =
 {
    "/sys/class/power_supply/BAT0/energy_full",
    "/sys/class/power_supply/BAT1/energy_full",
 };
-static const char *const     StatusBatteryFiles[] =
+static const char *const StatusBatteryFiles[] =
 {
    "/sys/class/power_supply/BAT0/status",
    "/sys/class/power_supply/BAT1/status",
 };
 
 /* Function prototypes */
-int batteryCharging(const char *fileName);
 unsigned long getBatteryValue(const char *fileName);
+int batteryCharging(const char *fileName);
 int getQualityLinkValue(char *wirelessInterfaceInfo);
 
 /*
@@ -81,7 +82,7 @@ void setBattery(dwmBattery *battery)
         battery->capacityWh += getBatteryValue(CapacityBatteryFiles[i]);
     }
 
-    for (i = 0; i < batteryCount && !(battery->charging); i++) {
+    for (i = 0; i < batteryCount && !battery->charging; i++) {
         battery->charging = batteryCharging(StatusBatteryFiles[i]);
     }
 
@@ -104,20 +105,15 @@ unsigned long getBatteryValue(const char *fileName)
 
 int batteryCharging(const char *fileName)
 {
-    char buffer[MAX_BUFFER_SIZE];
-    int fd, bytesRead;
+    char status[MAX_CHARGING_BUFFER];
+    FILE *fd;
 
-    fd = openFile(fileName, 'r');
-    bytesRead = read(fd, buffer, MAX_BUFFER_SIZE - 1);
-    closeFile(fd);
-
-    if (bytesRead < 0) {
-        return FALSE;
+    if ((fd = fopen(fileName, "r")) != NULL) {
+        fgets(status, MAX_CHARGING_BUFFER, fd);
+        fclose(fd);
     }
 
-    buffer[bytesRead] = '\0';
-
-    return strcmp(buffer, "Charging\n") == 0;
+    return strcmp(status, "Charging\n") == 0;
 }
 
 void setBatteryIcon(dwmBattery *battery)

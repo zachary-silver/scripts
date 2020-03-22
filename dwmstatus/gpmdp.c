@@ -63,7 +63,7 @@ void setSong(gpmdpSong *song)
     }
 
     song->active = TRUE;
-    (song->output)[bytesRead] = '\0';
+    song->output[bytesRead] = '\0';
 
     value = queryValue(song->output, query);
     setValue(song, query++, value);
@@ -140,7 +140,7 @@ void setSongOutput(gpmdpSong *song)
              song->playIcon, (song->likeIcon)[0] != '\0' ? " " : "",
              song->likeIcon, song->artist, song->title);
 
-    /* -2 to include room for space and null terminator */
+    /* -2 to include room for a space and the nul terminator */
     maxLength = MAX_SONG_OUTPUT - MAX_SONG_TIME_OUTPUT - 2;
     if (strlen(song->output) > maxLength) {
         strcpy(song->output + maxLength - 3, "...");
