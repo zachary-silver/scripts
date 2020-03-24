@@ -40,13 +40,7 @@ typedef struct {
     unsigned long usedBytes;
     unsigned long totalBytes;
     const char *icon;
-} dwmDisk;
-
-typedef struct {
-    unsigned long usedBytes;
-    unsigned long totalBytes;
-    const char *icon;
-} dwmMemory;
+} dwmDisk, dwmMemory;
 
 typedef struct {
     float percent;
