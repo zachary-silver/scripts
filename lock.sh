@@ -21,10 +21,10 @@ fi
 
 i3lock -e -i "$lock_screen" \
 --screen=1	      \
---timepos="ix:iy-5"  \
+--timepos="ix:iy+8"  \
 --timecolor=$WHITE    \
 --datepos="ix:iy+15"  \
---datestr "Type password to unlock..." \
+--datestr "" \
 --datecolor=$WHITE    \
 --clock		      \
 --force-clock	      \
@@ -35,8 +35,8 @@ i3lock -e -i "$lock_screen" \
 --indicator	      \
 \
 --insidevercolor=$GREY \
---ringvercolor=$YELLOW \
---verifcolor=$WHITE   \
+--ringvercolor=$WHITE \
+--verifcolor=$GREEN   \
 \
 --insidewrongcolor=$GREY \
 --ringwrongcolor=$RED   \
@@ -46,5 +46,5 @@ i3lock -e -i "$lock_screen" \
 --ringcolor=$BLACK	\
 --linecolor=$BLACK    \
 --separatorcolor=$BLACK	\
---keyhlcolor=$BLUE	\
+--keyhlcolor=$WHITE	\
 --bshlcolor=$RED      \
