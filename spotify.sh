@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ ! $(pgrep -lf spotifyd) ]]; then
-	spotifyd
+	/usr/bin/spotifyd
 fi
 
 st -c spotify -e spt &
