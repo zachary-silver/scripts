@@ -21,30 +21,27 @@ fi
 
 i3lock -e -i "$lock_screen" \
 --screen=1	      \
---timepos="ix:iy+8"  \
---timecolor=$WHITE    \
---datepos="ix:iy+15"  \
---datestr "" \
---datecolor=$WHITE    \
+--time-pos="ix:iy+8"  \
+--time-color=$WHITE    \
+--date-pos="ix:iy+15"  \
+--date-str "" \
+--date-color=$WHITE    \
 --clock		      \
 --force-clock	      \
---noinputtext=""      \
---veriftext=""	      \
---wrongtext=""	      \
 --radius=110	      \
 --indicator	      \
 \
---insidevercolor=$GREY \
---ringvercolor=$WHITE \
---verifcolor=$GREEN   \
+--insidever-color=$GREY \
+--ringver-color=$WHITE \
+--verif-color=$GREEN   \
 \
---insidewrongcolor=$GREY \
---ringwrongcolor=$RED   \
---wrongcolor=$WHITE   \
+--insidewrong-color=$GREY \
+--ringwrong-color=$RED   \
+--wrong-color=$WHITE   \
 \
---insidecolor=$GREY   \
---ringcolor=$BLACK	\
---linecolor=$BLACK    \
---separatorcolor=$BLACK	\
---keyhlcolor=$WHITE	\
---bshlcolor=$RED      \
+--inside-color=$GREY   \
+--ring-color=$BLACK	\
+--line-color=$BLACK    \
+--separator-color=$BLACK	\
+--keyhl-color=$WHITE	\
+--bshl-color=$RED      \
