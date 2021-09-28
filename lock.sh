@@ -45,3 +45,7 @@ i3lock -e -i "$lock_screen" \
 --separator-color=$BLACK	\
 --keyhl-color=$WHITE	\
 --bshl-color=$RED      \
+\
+--verif-text="" \
+--wrong-text="" \
+--noinput-text=""
