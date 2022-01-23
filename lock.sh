@@ -10,7 +10,7 @@ MAGENTA="#ba5d89d1"
 CYAN="#79d1c9d1"
 WHITE="#ffffffff"
 
-lock_screen="$HOME/Pictures/lock_screen.png"
+lock_screen="$HOME/pictures/lock_screen.png"
 
 if [ ! -e "$lock_screen" ]; then
 	scrot "$lock_screen"
