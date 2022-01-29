@@ -1,3 +1,4 @@
 #!/bin/bash
 
-killall dwmstatus && killall dwm
+killall dwmstatus
+killall dwm
