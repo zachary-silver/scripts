@@ -30,7 +30,8 @@ windowManagerName () {
 }
 
 ## Get system info
-user="${USER}@$(hostname)"
+hostname="$(hostnamectl | head -n 1 | awk '{ print $3 }')"
+user="${USER}@${hostname}"
 distro='Arch'
 kernel="$(uname -sr | sed 's/-.*//')"
 uptime="$(uptime -p | sed 's/up //')"
